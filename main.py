@@ -1,8 +1,9 @@
 import os
+
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -13,6 +14,10 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 class MessagePayload(BaseModel):
     content: str
     username: str = "FastAPI Bot"  # Optional: Overrides the webhook's default name
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 @app.post("/api/notify")
 async def send_discord_message(payload: MessagePayload):
