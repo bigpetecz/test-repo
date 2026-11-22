@@ -2,6 +2,7 @@ import json
 import os
 import re
 from datetime import datetime
+from urllib.parse import quote
 
 import cloudscraper
 from bs4 import BeautifulSoup
@@ -87,10 +88,12 @@ def passes_filter(text: str) -> bool:
     return has_64gb and has_max_chip
 
 
-def search_bazos(max_pages: int = 2):
+def search_bazos(max_pages: int = 2, *, query: str = "macbook 64gb"):
     print("--- Searching Bazoš.cz ---")
     found_items = []
     scraper = cloudscraper.create_scraper()
+
+    encoded_query = quote(query, safe='')
 
     for page in range(max_pages):
         # Bazoš pagination uses offset by 20 (0, 20, 40...), placed at the root path
@@ -100,9 +103,9 @@ def search_bazos(max_pages: int = 2):
         # so it fits on a single page and pagination isn't even required to see them all.
         start_offset = page * 20
         url = (
-            f"https://pc.bazos.cz/{start_offset}/?hledat=macbook+64gb&rubriky=pc"
+            f"https://pc.bazos.cz/{start_offset}/?hledat={encoded_query}&rubriky=pc"
             if start_offset > 0
-            else "https://pc.bazos.cz/?hledat=macbook+64gb&rubriky=pc"
+            else f"https://pc.bazos.cz/?hledat={encoded_query}&rubriky=pc"
         )
 
         try:

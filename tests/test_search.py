@@ -6,6 +6,8 @@ from modules.scrap import scrap
 
 class SearchSmokeTests(unittest.TestCase):
     def test_search_bazos_parses_matching_listings(self):
+        from urllib.parse import quote
+
         response = Mock(
             status_code=200,
             text="""
@@ -36,7 +38,7 @@ class SearchSmokeTests(unittest.TestCase):
             results = scrap.search_bazos(max_pages=1)
 
         scraper.get.assert_called_once_with(
-            "https://pc.bazos.cz/?hledat=macbook+64gb&rubriky=pc",
+            f"https://pc.bazos.cz/?hledat={quote('macbook 64gb', safe='')}&rubriky=pc",
             timeout=10,
         )
         self.assertEqual(
