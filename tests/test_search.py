@@ -53,6 +53,63 @@ class SearchSmokeTests(unittest.TestCase):
             ],
         )
 
+    def test_search_bazos_with_custom_query_paginated(self):
+        from urllib.parse import quote
+
+        custom_query = "macbook m3 64gb"
+        encoded_query = quote(custom_query, safe='')
+
+        response1 = Mock(
+            status_code=200,
+            text="""
+                <div class="inzeraty">
+                    <h2 class="nadpis">
+                        <a href="/inzerat/789">MacBook Air M3 Max 64GB</a>
+                    </h2>
+                    <div class="popis">MacBook Air with 64 GB RAM and M3 Max chip</div>
+                    <div class="inzeratycena">55 000 Kč</div>
+                    <div class="inzeratylok">Ostrava<br>701 00</div>
+                    <span class="velikost10"> - [15.11. 2026]</span>
+                </div>
+            """,
+        )
+        response2 = Mock(
+            status_code=200,
+            text="""
+                <div class="inzeraty">
+                    <h2 class="nadpis">
+                        <a href="/inzerat/790">MacBook Pro M3 Max 64GB</a>
+                    </h2>
+                    <div class="popis">MacBook Pro with 64 GB RAM and M3 Max chip</div>
+                    <div class="inzeratycena">60 000 Kč</div>
+                    <div class="inzeratylok">Brno<br>602 00</div>
+                    <span class="velikost10"> - [16.11. 2026]</span>
+                </div>
+            """,
+        )
+        scraper = Mock()
+        scraper.get.side_effect = [response1, response2]
+
+        with patch(
+            "modules.scrap.scrap.cloudscraper.create_scraper",
+            return_value=scraper,
+        ):
+            results = scrap.search_bazos(max_pages=2, query=custom_query)
+
+        calls = scraper.get.call_args_list
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(
+            calls[0][0][0],
+            f"https://pc.bazos.cz/?hledat={encoded_query}&rubriky=pc",
+        )
+        self.assertEqual(
+            calls[1][0][0],
+            f"https://pc.bazos.cz/20/?hledat={encoded_query}&rubriky=pc",
+        )
+        self.assertEqual(len(results), 2)
+        self.assertEqual(results[0]["title"], "MacBook Air M3 Max 64GB")
+        self.assertEqual(results[1]["title"], "MacBook Pro M3 Max 64GB")
+
     def test_search_sbazar_parses_matching_listings(self):
         response = Mock(
             status_code=200,
