@@ -87,6 +87,29 @@ def passes_filter(text: str) -> bool:
     return has_64gb and has_max_chip
 
 
+def classify_price_band(price: str) -> str:
+    if price == "N/A":
+        return "unknown"
+
+    match = re.search(r"(\d[\d\s ]*?)(?:\s*)(Kč|Kc|CZK)\b", price, re.IGNORECASE)
+    if not match:
+        return "unknown"
+
+    price_str = match.group(1).replace(" ", "").replace(" ", "")
+
+    try:
+        price_num = int(price_str)
+    except ValueError:
+        return "unknown"
+
+    if price_num < 20000:
+        return "budget"
+    elif price_num < 40000:
+        return "mid"
+    else:
+        return "premium"
+
+
 def search_bazos(max_pages: int = 2):
     print("--- Searching Bazoš.cz ---")
     found_items = []
@@ -173,6 +196,7 @@ def search_bazos(max_pages: int = 2):
                             "location": location,
                             "link": link,
                             "posted_date": posted_date,
+                            "price_band": classify_price_band(price),
                         })
 
         except Exception as e:
